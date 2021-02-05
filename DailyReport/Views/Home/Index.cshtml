@@ -1,0 +1,166 @@
+﻿@model List<WorkingHistoryModel>
+
+
+@functions{
+    object GetEditingProduct(ASPxGridView grid)
+    {
+        if (grid.IsNewRowEditing)
+            return new WorkingHistoryModel() { WorkingDate = DateTime.Today };
+        return grid.GetRow(grid.EditingRowVisibleIndex);
+    }
+}
+@Html.DevExpress().GridView(settings =>
+{
+    settings.Name = "grvWorkingHistory";
+    settings.KeyFieldName = "Id";
+    settings.Width = Unit.Percentage(100);
+    settings.CommandColumn.Visible = true;
+    settings.CommandColumn.ShowNewButtonInHeader = true;
+    settings.CommandColumn.ShowDeleteButton = true;
+    settings.CommandColumn.ShowEditButton = true;
+    settings.SettingsBehavior.ConfirmDelete = false;
+    settings.SettingsPager.PageSizeItemSettings.Visible = true;
+    settings.SettingsPager.PageSizeItemSettings.Items = new string[] { "10", "20", "50" };
+
+    settings.Settings.ShowFilterRow = true;
+    settings.Settings.ShowFilterRowMenu = true;
+    settings.SettingsBehavior.AllowGroup = true;
+    settings.Settings.ShowGroupPanel = true;
+    settings.SettingsEditing.Mode = GridViewEditingMode.EditFormAndDisplayRow;
+    settings.CallbackRouteValues = new { Action = "DoCallbackWorkingHistory" };
+    settings.SettingsEditing.AddNewRowRouteValues = new { Action = "DoAddNewWorkingHistory" };
+    settings.SettingsEditing.UpdateRowRouteValues = new { Action = "DoUpdateWorkingHistory" };
+    settings.SettingsEditing.DeleteRowRouteValues = new { Action = "DoDeleteWorkingHistory" };
+    settings.SettingsBehavior.AllowHeaderFilter = true;
+    settings.CommandColumn.ShowClearFilterButton = true;
+    settings.Settings.AutoFilterCondition = AutoFilterCondition.Contains;
+    settings.Columns.Add(col =>
+    {
+        col.FieldName = "WorkingDate";
+        col.Width = Unit.Percentage(10);
+        col.GroupIndex = 0;
+        col.EditorProperties().DateEdit(s =>
+        {
+            s.DisplayFormatString = "dd/MM/yyyy";
+        });
+    });
+    settings.Columns.Add(col =>
+    {
+        col.FieldName = "WorkInDay";
+        col.Width = Unit.Percentage(40);
+
+    });
+    settings.Columns.Add(col =>
+    {
+        col.FieldName = "PercentageComplete";
+        col.EditorProperties().SpinEdit(s =>
+        {
+            s.NumberType = SpinEditNumberType.Float;
+            s.SpinButtons.ShowIncrementButtons = false;
+            s.SpinButtons.ShowLargeIncrementButtons = false;
+            s.DisplayFormatString = "{0}%";
+            s.DisplayFormatInEditMode = true;
+        });
+        col.Width = Unit.Percentage(5);
+    });
+    settings.Columns.Add(col =>
+    {
+        col.FieldName = "Problem";
+        col.Width = Unit.Percentage(30);
+    });
+
+    settings.CommandColumn.VisibleIndex = settings.Columns.Count;
+    settings.SetEditFormTemplateContent(c =>
+    {
+        Html.DevExpress().FormLayout(flSettings =>
+        {
+            flSettings.Name = "frmLayoutWorkingHistory";
+            flSettings.Width = Unit.Percentage(100);
+            //flSettings.Items.AddGroupItem(g => { });
+            flSettings.Items.Add(i =>
+            {
+                i.FieldName = "WorkingDate";
+                i.Caption = "Ngày";
+                i.NestedExtension().DateEdit(s =>
+                {
+                    s.Properties.ValidationSettings.RequiredField.IsRequired = true;
+                    s.Properties.ValidationSettings.ErrorDisplayMode = ErrorDisplayMode.ImageWithTooltip;
+                    s.Properties.ValidationSettings.Display = Display.Dynamic;
+                    s.ShowModelErrors = true;
+                    s.Width = Unit.Percentage(25);
+                });
+            });
+            flSettings.Items.Add(i =>
+            {
+                i.FieldName = "WorkInDay";
+                i.Caption = "Công việc xử lý";
+                i.NestedExtension().Memo(s =>
+                {
+                    s.Properties.ValidationSettings.RequiredField.IsRequired = true;
+                    s.Properties.ValidationSettings.ErrorDisplayMode = ErrorDisplayMode.ImageWithTooltip;
+                    s.Properties.ValidationSettings.Display = Display.Dynamic;
+                    s.ShowModelErrors = true;
+                    s.Width = Unit.Percentage(100);
+                    s.Properties.Rows = 5;
+                });
+            });
+            flSettings.Items.Add(i =>
+            {
+                i.FieldName = "PercentageComplete";
+                i.Caption = "% Hoàn thành";
+                i.NestedExtension().SpinEdit(s =>
+                {
+                    s.Properties.ValidationSettings.RequiredField.IsRequired = true;
+                    s.Properties.ValidationSettings.ErrorDisplayMode = ErrorDisplayMode.ImageWithTooltip;
+                    s.Properties.ValidationSettings.Display = Display.Dynamic;
+                    s.ShowModelErrors = true;
+                    s.Width = Unit.Percentage(25);
+                    s.Properties.DisplayFormatString = "{0}%";
+                    s.Properties.DisplayFormatInEditMode = true;
+                    s.Properties.NumberType = SpinEditNumberType.Float;
+                    s.Properties.SpinButtons.ShowIncrementButtons = false;
+                    s.Properties.SpinButtons.ShowLargeIncrementButtons = false;
+                    s.Properties.MinValue = 0;
+                    s.Properties.MaxValue = 100;
+                });
+            });
+            flSettings.Items.Add(i =>
+            {
+                i.FieldName = "Problem";
+                i.Caption = "Khó khăn gặp phải";
+                i.NestedExtension().Memo(s =>
+                {
+                    s.Properties.ValidationSettings.ErrorDisplayMode = ErrorDisplayMode.ImageWithTooltip;
+                    s.Properties.ValidationSettings.Display = Display.Dynamic;
+                    s.ShowModelErrors = true;
+                    s.Width = Unit.Percentage(100);
+                    s.Properties.Rows = 5;
+                });
+            });
+            flSettings.Items.AddEmptyItem();
+            flSettings.Items.Add(i =>
+            {
+                i.ShowCaption = DefaultBoolean.False;
+            }).SetNestedContent(() =>
+            {
+                ViewContext.Writer.Write("<div style='float:right'>");
+                Html.DevExpress().Button(btnSettings =>
+                {
+                    btnSettings.Name = "btnUpdate";
+                    btnSettings.Text = "Lưu";
+                    btnSettings.ClientSideEvents.Click = "function(s, e){ " + settings.Name + ".UpdateEdit(); }";
+                }).Render();
+                Html.DevExpress().Button(btnSettings =>
+                {
+                    btnSettings.Name = "btnCancel";
+                    btnSettings.Text = "Hủy";
+                    btnSettings.Style[HtmlTextWriterStyle.MarginLeft] = "5px";
+                    btnSettings.ClientSideEvents.Click = "function(s, e){ " + settings.Name + ".CancelEdit(); }";
+                }).Render();
+                ViewContext.Writer.Write("</div>");
+            });
+        }).Bind(GetEditingProduct(c.Grid)).Render();
+    });
+
+}).Bind(Model).GetHtml()
+

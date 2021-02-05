@@ -1,0 +1,76 @@
+﻿
+@model BPMWorklist.Models.TaskModel
+
+
+<style>
+    legend {
+        text-transform: uppercase;
+        font-weight: bold;
+    }
+
+    textarea {
+        max-width: none !important;
+    }
+
+    .dxbButtonSys {
+        margin: 5px;
+    }
+</style>
+<form method="post" id="frm-update-task" action="@Url.Action("DoUpdateTask")">
+    @Html.HiddenFor(m => m.Outcome)
+        @Html.DevExpress().FormLayout(f =>
+   {
+       f.Name = "frm";
+       f.Width = Unit.Percentage(100);
+       var taskActionGroupItem = f.Items.AddGroupItem(i =>
+       {
+           i.Caption = "Task Action";
+           i.ColCount = Model.ListAction.Count + 7;
+           i.Width = Unit.Percentage(20);
+       });
+
+       foreach (var action in Model.ListAction)
+       {
+           taskActionGroupItem.Items.Add( i =>
+           {
+               i.ShowCaption = DefaultBoolean.False;
+               i.Width = Unit.Percentage(1);
+               i.NestedExtension().Button(s => {s.Name = action; s.Width = Unit.Percentage(50); s.Text = action;s.ClientSideEvents.Click = "OnUpdateTask"; });
+           });
+       }
+
+       var groupItem = f.Items.AddGroupItem(i =>
+       {
+           i.Caption = "Task Detail";
+           i.SettingsItemHelpTexts.Position = HelpTextPosition.Bottom;
+           i.ColCount = 2;
+       });
+       groupItem.Items.Add(m => m.TaskId, i =>
+       {
+           i.NestedExtension().TextBox(s => { s.Width = Unit.Percentage(100); s.ReadOnly = true; });
+       });
+       groupItem.Items.Add(m => m.Title, i =>
+       {
+           i.NestedExtension().TextBox(s => { s.Width = Unit.Percentage(100); s.ReadOnly = true; });
+       });
+       groupItem.Items.Add(m => m.LastUpdatedDate, i =>
+       {
+           i.NestedExtension().TextBox(s => { s.Width = Unit.Percentage(100); s.ReadOnly = true; });
+       });
+       groupItem.Items.Add(m => m.PayloadUpdateSeq, i =>
+       {
+           i.NestedExtension().TextBox(s => { s.Width = Unit.Percentage(100); s.ReadOnly = true; });
+       });
+       var payloadGroupItem = f.Items.AddGroupItem(i =>
+       {
+           i.Caption = "Payload data";
+           i.SettingsItemHelpTexts.Position = HelpTextPosition.Bottom;
+       });
+       payloadGroupItem.Items.Add(m => m.Payload, i =>
+       {
+           i.NestedExtension().Memo(s => { s.Width = Unit.Percentage(100); s.Properties.Rows = 20; });
+       });
+   }).GetHtml()
+    @Html.HiddenFor(m => m.Username)
+
+</form>

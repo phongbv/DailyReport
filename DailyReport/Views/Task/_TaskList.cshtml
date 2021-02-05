@@ -1,0 +1,29 @@
+﻿@model List<TaskModel>
+
+@Html.DevExpress().GridView(settings => {
+    settings.Name = "gvTaskList";
+    settings.KeyFieldName = "TaskId";
+    settings.SettingsSearchPanel.Visible = true;
+    settings.Width = Unit.Percentage(100);
+    settings.CallbackRouteValues = new { Action = "OnCallbackTaskList" };
+    settings.SettingsPager.PageSize = 5;
+    settings.SettingsPager.PageSizeItemSettings.Items = new string[] { "30", "50", "70", "100", "150" };
+    settings.SettingsPager.Visible = true;
+    settings.Settings.VerticalScrollBarMode = ScrollBarMode.Auto;
+    settings.Settings.VerticalScrollableHeight = 150;
+    settings.SettingsPager.PageSizeItemSettings.Visible = true;
+    //settings.SettingsBehavior.AllowFocusedRow = true;
+    settings.SettingsBehavior.AllowSelectByRowClick = true;
+    settings.SettingsBehavior.AllowSelectSingleRowOnly = true;
+
+
+
+    settings.Columns.Add("TaskId").Width = Unit.Percentage(20);
+    settings.Columns.Add("Title").Width = Unit.Percentage(30);
+    settings.Columns.Add("CARCode").Width = Unit.Percentage(10);
+    settings.Columns.Add("ProcessCode").Width = Unit.Percentage(10);
+    settings.Columns.Add("StageCode").Width = Unit.Percentage(10);
+    settings.Columns.Add("PayloadVersion").Width = Unit.Percentage(10);
+    settings.Columns.Add("LastUpdatedDate").Width = Unit.Percentage(10);
+    settings.ClientSideEvents.SelectionChanged = "OnSelectionTaskChanged";
+}).Bind(Model).GetHtml()
