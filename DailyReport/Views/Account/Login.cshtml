@@ -1,28 +1,168 @@
 ﻿@model UserModel
+@{
+    Layout = null;
+}
+@Html.DevExpress().GetScripts(
+    new Script { ExtensionSuite = ExtensionSuite.NavigationAndLayout },
+    new Script { ExtensionSuite = ExtensionSuite.Editors },
+    new Script { ExtensionSuite = ExtensionSuite.GridView },
+    new Script { ExtensionSuite = ExtensionSuite.TreeList }
+)
+<style>
+    body {
+        background: url('http://cdn.wallpapersafari.com/13/6/Mpsg2b.jpg');
+        margin: 0px;
+        font-family: 'Ubuntu', sans-serif;
+        background-size: 100% 110%;
+    }
 
+    h1, h2, h3, h4, h5, h6, a {
+        margin: 0;
+        padding: 0;
+    }
 
-@using (Html.BeginForm())
+    .login {
+        margin: 0 auto;
+        max-width: 500px;
+    }
+
+    .login-header {
+        color: #fff;
+        text-align: center;
+        font-size: 300%;
+    }
+    /* .login-header h1 {
+        text-shadow: 0px 5px 15px #000; */
+    }
+
+    .login-form {
+        border: .5px solid #fff;
+        background: #4facff;
+        border-radius: 10px;
+        box-shadow: 0px 0px 10px #000;
+    }
+
+        .login-form h3 {
+            text-align: left;
+            margin-left: 40px;
+            color: #fff;
+        }
+
+    .login-form {
+        box-sizing: border-box;
+        padding-top: 15px;
+        padding-bottom: 10%;
+        margin: 5% auto;
+        text-align: center;
+    }
+
+    .login input[type="text"],
+    .login input[type="password"] {
+        max-width: 400px;
+        width: 80%;
+        line-height: 3em;
+        font-family: 'Ubuntu', sans-serif;
+        margin: 1em 2em;
+        border-radius: 5px;
+        border: 2px solid #f2f2f2;
+        outline: none;
+        padding-left: 10px;
+    }
+
+    .login-form input[type="button"] {
+        height: 30px;
+        width: 100px;
+        background: #fff;
+        border: 1px solid #f2f2f2;
+        border-radius: 20px;
+        color: slategrey;
+        text-transform: uppercase;
+        font-family: 'Ubuntu', sans-serif;
+        cursor: pointer;
+    }
+
+    .sign-up {
+        color: #f2f2f2;
+        margin-left: -70%;
+        cursor: pointer;
+        text-decoration: underline;
+    }
+
+    .no-access {
+        color: #E86850;
+        margin: 20px 0px 20px -57%;
+        text-decoration: underline;
+        cursor: pointer;
+    }
+
+    .try-again {
+        color: #f2f2f2;
+        text-decoration: underline;
+        cursor: pointer;
+    }
+
+    /*Media Querie*/
+    @@media only screen and (min-width : 150px) and (max-width : 530px) {
+        .login-form h3 {
+            text-align: center;
+            margin: 0;
+        }
+
+        .sign-up, .no-access {
+            margin: 10px 0;
+        }
+
+        .login-button {
+            margin-bottom: 10px;
+        }
+    }
+</style>
+<link href='https://fonts.googleapis.com/css?family=Ubuntu:500' rel='stylesheet' type='text/css'>
+@using (Html.BeginForm("Login", "Account", FormMethod.Post, new { id = "frm-login" }))
 {
     @Html.AntiForgeryToken()
-    <div class="card custom-card">
-        <div class="card-header bg-primary text-white">
-            <h3>Login Form</h3>
+    <div class="login">
+        <div class="login-header">
+            <h1>Login</h1>
         </div>
-        <div class="card-body">
-            <div class="form-group">
-                @Html.LabelFor(m => m.Username)
-                @Html.TextBoxFor(m => m.Username, new { @class = "form-control" })
-                @Html.ValidationMessageFor(m => m.Username)
-            </div>
-            <div class="form-group">
-                @Html.LabelFor(m => m.Password)
-                @Html.PasswordFor(m => m.Password, new { @class = "form-control" })
-                @Html.ValidationMessageFor(m => m.Password)
-            </div>
-            <div class="form-group">
-                <button type="submit" class="btn btn-primary rounded-0">Login</button>
-            </div>
-
+        <div class="login-form">
+            <h3>Username:</h3>
+            @*<input type="text" placeholder="Username" name="Username" id="Username" />*@
+            @Html.TextBoxFor(m => m.Username, new { @class = "form-control", placeholder = "Username" })
+            @Html.ValidationMessageFor(m => m.Username)
+            <br>
+            <h3>Password:</h3>
+            @*<input type="password" placeholder="Password" name="Password" id="Password" />*@
+            @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Password" })
+            @Html.ValidationMessageFor(m => m.Password)
+            <br>
+            <input type="button" value="Login" class="login-button" />
         </div>
     </div>
-}  
+}
+
+<script>
+    $(document).ready(function () {
+        $("input").bind("keydown", function (event) {
+            
+            var keycode = (event.keyCode ? event.keyCode : (event.which ? event.which : event.charCode));
+            console.log(keycode)
+            if (keycode == 13) {
+                $('.login-button').click();
+                return false;
+            } else {
+                return true;
+            }
+        });
+    });
+    $('.login-button , .no-access').click(function () {
+        $('.login').slideUp(500);
+        $('.error-page').slideDown(1000);
+        $("#frm-login").submit();
+    });
+
+    $('.try-again').click(function () {
+        $('.error-page').hide(0);
+        $('.login').slideDown(1000);
+    });
+</script>

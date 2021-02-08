@@ -1,34 +1,18 @@
 ﻿using DailyReport.Models;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 
 namespace DailyReport.Controllers
 {
-    public class HomeController : Controller
+    [Authorize]
+    public class HomeController : BaseController
     {
-        User currentUser = null;
-        protected override void OnActionExecuting(ActionExecutingContext filterContext)
-        {
-            var controllerName = filterContext.ActionDescriptor.ControllerDescriptor.ControllerName;
-            var forwardAdd = Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
-            var clientAddress = forwardAdd ?? Request.ServerVariables["REMOTE_ADDR"];
-            using (var dbContext = new DataContext())
-            {
-                bool isLocal = Request.IsLocal;
-                currentUser = isLocal ? dbContext.Users.FirstOrDefault(e=>e.Username == "test"):dbContext.Users.FirstOrDefault(e => e.TrustedIP.Contains(clientAddress));
-                if (currentUser == null)
-                {
-                    filterContext.Result = Content($"Địa chỉ {clientAddress} không có quyền truy cập. Vui lòng kiểm tra lại.");
-                    return;
-                }
-            }
-            base.OnActionExecuting(filterContext);
-        }
+        public static readonly bool CanViewOtherTasks = bool.Parse(ConfigurationManager.AppSettings["view-all-tasks"]);
 
-        // GET: Home
         public ActionResult Index()
         {
             return View(GetWorkingHistoryByUser());
@@ -56,7 +40,7 @@ namespace DailyReport.Controllers
         {
             if (ModelState.IsValid)
             {
-                workingHistoryModel.UserId = currentUser.Id;
+                workingHistoryModel.UserId = User.Id;
                 DoSaveWorkingHistory(workingHistoryModel);
             }
             return DoCallbackWorkingHistory();
@@ -65,7 +49,7 @@ namespace DailyReport.Controllers
         {
             if (ModelState.IsValid)
             {
-                workingHistoryModel.UserId = currentUser.Id;
+                workingHistoryModel.UserId = User.Id;
                 DoSaveWorkingHistory(workingHistoryModel);
             }
             return DoCallbackWorkingHistory();
@@ -74,16 +58,17 @@ namespace DailyReport.Controllers
         {
             using (var dbContext = new DataContext())
             {
-                var lstWorking = dbContext.WorkingHistories.Where(e => e.UserId == currentUser.Id).Select(e => new WorkingHistoryModel()
+                var lstWorking = dbContext.WorkingHistories.Where(e => e.UserId == User.Id || User.IsAdmin || CanViewOtherTasks).Select(e => new WorkingHistoryModel()
                 {
                     Id = e.Id,
                     PercentageComplete = e.PercentageComplete,
                     Problem = e.Problem,
                     UserId = e.UserId,
                     WorkInDay = e.WorkInDay,
-                    WorkingDate = e.WorkingDate
+                    WorkingDate = e.WorkingDate,
+                    Username = e.User.Username
 
-                }).OrderByDescending(e=>e.WorkingDate).ToList();
+                }).OrderByDescending(e => e.WorkingDate).ToList();
                 return lstWorking;
             }
         }
@@ -98,6 +83,10 @@ namespace DailyReport.Controllers
                 {
                     entity = new WorkingHistory();
                     dbContext.WorkingHistories.Add(entity);
+                }
+                else if(entity.UserId != workingHistoryModel.UserId)
+                {
+                    throw new Exception("Bạn không có quyền chỉnh sửa công việc của người khác");
                 }
                 entity.UserId = workingHistoryModel.UserId;
                 entity.PercentageComplete = workingHistoryModel.PercentageComplete;

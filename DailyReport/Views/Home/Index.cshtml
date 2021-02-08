@@ -1,5 +1,5 @@
 ﻿@model List<WorkingHistoryModel>
-
+@using DailyReport.Controllers
 
 @functions{
     object GetEditingProduct(ASPxGridView grid)
@@ -8,6 +8,11 @@
             return new WorkingHistoryModel() { WorkingDate = DateTime.Today };
         return grid.GetRow(grid.EditingRowVisibleIndex);
     }
+
+}
+@{
+    var currentUser = (User as UserModel);
+    bool IsDisplayOtherTask = currentUser.IsAdmin || HomeController.CanViewOtherTasks;
 }
 @Html.DevExpress().GridView(settings =>
 {
@@ -34,11 +39,21 @@
     settings.SettingsBehavior.AllowHeaderFilter = true;
     settings.CommandColumn.ShowClearFilterButton = true;
     settings.Settings.AutoFilterCondition = AutoFilterCondition.Contains;
+    if (IsDisplayOtherTask)
+    {
+        settings.Columns.Add(col =>
+        {
+            col.FieldName = "Username";
+            col.Caption = "Nhân viên";
+            col.Width = Unit.Percentage(10);
+            col.GroupIndex = 0;
+        });
+    }
     settings.Columns.Add(col =>
     {
         col.FieldName = "WorkingDate";
         col.Width = Unit.Percentage(10);
-        col.GroupIndex = 0;
+        col.GroupIndex = IsDisplayOtherTask ? 1 : 0;
         col.EditorProperties().DateEdit(s =>
         {
             s.DisplayFormatString = "dd/MM/yyyy";

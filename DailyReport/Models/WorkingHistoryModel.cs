@@ -10,6 +10,8 @@ namespace DailyReport.Models
     {
         public int Id { get; set; }
         public int UserId { get; set; }
+        [Display(Name = "Nhân viên")]
+        public string Username { get; set; }
         [Display(Name = "Ngày")]
         [Required(ErrorMessage = "Trường này không được để trống")]
         public System.DateTime WorkingDate { get; set; }
