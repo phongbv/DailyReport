@@ -25,9 +25,11 @@
     settings.CommandColumn.ShowEditButton = true;
     settings.SettingsBehavior.ConfirmDelete = false;
     settings.SettingsPager.PageSizeItemSettings.Visible = true;
-    settings.SettingsPager.PageSizeItemSettings.Items = new string[] { "10", "20", "50" };
+    settings.SettingsPager.PageSizeItemSettings.Items = new string[] { "10", "20", "50", "100", "200", "500" };
+    settings.CustomColumnSort = settings.CustomColumnGroup;
 
-    settings.Settings.ShowFilterRow = true;
+    settings.SettingsPager.PageSize = 500;
+    settings.Settings.ShowFilterRow = false;
     settings.Settings.ShowFilterRowMenu = true;
     settings.SettingsBehavior.AllowGroup = true;
     settings.Settings.ShowGroupPanel = true;
@@ -36,9 +38,36 @@
     settings.SettingsEditing.AddNewRowRouteValues = new { Action = "DoAddNewWorkingHistory" };
     settings.SettingsEditing.UpdateRowRouteValues = new { Action = "DoUpdateWorkingHistory" };
     settings.SettingsEditing.DeleteRowRouteValues = new { Action = "DoDeleteWorkingHistory" };
-    settings.SettingsBehavior.AllowHeaderFilter = true;
+    settings.SettingsBehavior.AllowHeaderFilter = false;
     settings.CommandColumn.ShowClearFilterButton = true;
     settings.Settings.AutoFilterCondition = AutoFilterCondition.Contains;
+    settings.PreRender = (sender, e) =>
+    {
+        ASPxGridView grid = (ASPxGridView)sender;
+        var column = grid.GetGroupedColumns()[0];
+
+        string groupTextToOpen = DateTime.Today.ToString("MM/dd/yy");
+
+        for (int index = 0; index < grid.VisibleRowCount; index++)
+        {
+            var groupRowValue = grid.GetRowValues(index, column.FieldName) + "";
+            if (groupRowValue.Contains(DateTime.Today.ToString("MM/dd/yy")) || groupRowValue.Contains(DateTime.Today.AddDays(-1).ToString("MM/dd/yy")))
+            {
+                grid.ExpandRow(index, true);
+            }
+        }
+    };
+
+    settings.Columns.Add(col =>
+    {
+        col.FieldName = "WorkingDate";
+        col.Width = Unit.Percentage(10);
+        col.GroupIndex = 0;
+        col.EditorProperties().DateEdit(s =>
+        {
+            s.DisplayFormatString = "dd/MM/yyyy";
+        });
+    });
     if (IsDisplayOtherTask)
     {
         settings.Columns.Add(col =>
@@ -46,19 +75,9 @@
             col.FieldName = "Username";
             col.Caption = "Nhân viên";
             col.Width = Unit.Percentage(10);
-            col.GroupIndex = 0;
+            col.GroupIndex = 1;
         });
     }
-    settings.Columns.Add(col =>
-    {
-        col.FieldName = "WorkingDate";
-        col.Width = Unit.Percentage(10);
-        col.GroupIndex = IsDisplayOtherTask ? 1 : 0;
-        col.EditorProperties().DateEdit(s =>
-        {
-            s.DisplayFormatString = "dd/MM/yyyy";
-        });
-    });
     settings.Columns.Add(col =>
     {
         col.FieldName = "WorkInDay";
@@ -177,5 +196,5 @@
         }).Bind(GetEditingProduct(c.Grid)).Render();
     });
 
-}).Bind(Model).GetHtml()
+}).Bind(Model.OrderByDescending(e=>e.WorkingDate)).GetHtml()
 
