@@ -27,5 +27,6 @@ namespace DailyReport.Models
     
         public virtual DbSet<User> Users { get; set; }
         public virtual DbSet<WorkingHistory> WorkingHistories { get; set; }
+        public virtual DbSet<DocumentReporting> DocumentReportings { get; set; }
     }
 }

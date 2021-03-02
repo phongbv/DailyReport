@@ -1,0 +1,146 @@
+﻿
+@model List<DocumentReporting>
+@using DailyReport.Controllers
+
+@{
+    var currentUser = (User as UserModel);
+    bool IsDisplayOtherTask = currentUser.IsAdmin || HomeController.CanViewOtherTasks;
+}
+@Html.DevExpress().GridView(settings =>
+{
+    settings.Name = "grvDocumentReporting";
+    settings.KeyFieldName = "Id";
+    settings.Width = Unit.Percentage(100);
+    //settings.CommandColumn.Visible = true;
+    //settings.CommandColumn.ShowNewButtonInHeader = true;
+    //settings.CommandColumn.ShowDeleteButton = true;
+    //settings.CommandColumn.ShowEditButton = true;
+    settings.SettingsBehavior.ConfirmDelete = false;
+    settings.SettingsPager.PageSizeItemSettings.Visible = true;
+    settings.SettingsPager.PageSizeItemSettings.Items = new string[] { "10", "20", "50", "100", "200", "500" };
+    settings.CustomColumnSort = settings.CustomColumnGroup;
+
+    settings.SettingsPager.PageSize = 500;
+    settings.Settings.ShowFilterRow = false;
+    settings.Settings.ShowFilterRowMenu = true;
+    settings.SettingsBehavior.AllowGroup = true;
+    settings.Settings.ShowGroupPanel = true;
+    //settings.SettingsEditing.Mode = GridViewEditingMode.EditFormAndDisplayRow;
+    settings.CallbackRouteValues = new { Action = "DoCallbackDocumentReporting" };
+    //settings.SettingsEditing.AddNewRowRouteValues = new { Action = "DoAddNewWorkingHistory" };
+    //settings.SettingsEditing.UpdateRowRouteValues = new { Action = "DoUpdateWorkingHistory" };
+    //settings.SettingsEditing.DeleteRowRouteValues = new { Action = "DoDeleteWorkingHistory" };
+    settings.SettingsBehavior.AllowHeaderFilter = false;
+    settings.CommandColumn.ShowClearFilterButton = true;
+    settings.Settings.AutoFilterCondition = AutoFilterCondition.Contains;
+    //settings.PreRender = (sender, e) =>
+    //{
+    //    ASPxGridView grid = (ASPxGridView)sender;
+    //    var column = grid.GetGroupedColumns()[0];
+
+    //    string groupTextToOpen = DateTime.Today.ToString("MM/dd/yy");
+
+    //    for (int index = 0; index < grid.VisibleRowCount; index++)
+    //    {
+    //        var groupRowValue = grid.GetRowValues(index, column.FieldName) + "";
+    //        if (groupRowValue.Contains(DateTime.Today.ToString("MM/dd/yy")) || groupRowValue.Contains(DateTime.Today.AddDays(-1).ToString("MM/dd/yy")))
+    //        {
+    //            grid.ExpandRow(index, true);
+    //        }
+    //    }
+    //};
+
+    settings.Columns.Add(col =>
+    {
+        col.FieldName = "WorkItemId";
+        col.Caption = "Mã WIT";
+        col.Width = Unit.Percentage(10);
+        col.SetDataItemTemplateContent(c =>
+        {
+            Html.DevExpress().HyperLink(s =>
+            {
+                s.Name = Guid.NewGuid().ToString();
+                s.NavigateUrl = "http://sptserver.ists.corp:8080/tfs/iLendingPro/iLendingPro/_workitems?id=" + c.Text + "&_a=edit&fullScreen=true";
+                s.Properties.Text = c.Text;
+                s.Properties.Target = "_blank";
+            }).Render();
+        });
+        //col.GroupIndex = 0;
+    });
+    settings.Columns.Add(col =>
+    {
+        col.FieldName = "State";
+        col.Caption = "Trạng thái WIT";
+        col.Width = Unit.Percentage(10);
+
+    });
+    settings.Columns.Add(col =>
+    {
+        col.FieldName = "Summary";
+        col.Caption = "Chi tiết lỗi";
+        col.Width = Unit.Percentage(50);
+    });
+    settings.Columns.Add(col =>
+    {
+        col.FieldName = "UpdateDate";
+        col.Caption = "Cập nhật lần cuối";
+        col.Width = Unit.Percentage(20);
+        col.EditorProperties().DateEdit(d =>
+        {
+            d.DisplayFormatString = "dd/MM/yyyy HH:mm";
+        });
+    });
+
+    settings.Columns.Add(col =>
+    {
+        col.FieldName = "IsComplete";
+        col.Caption = "Đã hoàn thành";
+        col.Width = Unit.Percentage(20);
+        col.EditorProperties().ComboBox(d =>
+        {
+            d.TextField = "Description";
+            d.ValueField = "Value";
+            d.BindList(new List<ComboboxItem>()
+            {
+                new ComboboxItem()
+                {
+                    Description = "Chưa hoàn thành",
+                    Value = false.ToString()
+                },
+                new ComboboxItem()
+                {
+                    Description = "Hoàn thành",
+                    Value = true.ToString()
+                }
+            });
+        });
+    });
+
+    settings.CommandColumn.VisibleIndex = settings.Columns.Count;
+    settings.CommandColumn.CustomButtons.Add(new GridViewCommandColumnCustomButton() { ID = "btn", Text = "Hoàn thành" });
+    string script = @"var key = s.GetRowKey(e.visibleIndex)
+    $.ajax({
+    url: ""/Document/DoCompleteWorkItem"",
+        data:
+    {
+        id: key
+        },
+        success: function() {
+        grvDocumentReporting.Refresh();
+    }
+})";
+    settings.ClientSideEvents.CustomButtonClick = "function(s,e){" + script + "}";
+}).Bind(Model).GetHtml()
+
+@*<script>
+        var key = s.GetRowKey(e.visibleIndex)
+        $.ajax({
+            url: "/Document/DoCompleteWorkItem",
+            data: {
+                id: key
+            },
+            success: function () {
+                grvDocumentReporting.Refresh();
+            }
+        })
+    </script>*@
