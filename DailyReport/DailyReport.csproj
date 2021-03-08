@@ -510,6 +510,7 @@
     </Content>
     <None Include="Properties\PublishProfiles\BPMWorklist.pubxml" />
     <None Include="Properties\PublishProfiles\Debug.pubxml" />
+    <None Include="Properties\PublishProfiles\PublishRelease.pubxml" />
     <None Include="Scripts\jquery-3.0.0-vsdoc.js" />
     <Content Include="Scripts\jquery-3.0.0.js" />
     <Content Include="Scripts\jquery-3.0.0.min.js" />

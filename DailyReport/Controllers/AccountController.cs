@@ -88,6 +88,32 @@ namespace DailyReport.Controllers
             return "Thành công";
         }
         [Authorize]
+        public string Create(string username)
+        {
+            var currentUsername = (User as UserModel).Username.ToLower();
+            if (AdminUsers.Contains(currentUsername) == false)
+            {
+                return "Bạn không có quyền truy cập";
+            }
+            using (var dbContext = new DataContext())
+            {
+
+                string newPass = HashPassword.Hash(username, "123456a@");
+                var user = dbContext.Users.FirstOrDefault(e => e.Username.ToLower() == username);
+                if (user != null) return "Người dùng đã tồn tại";
+                user = new User()
+                {
+                    Username = username,
+                    Password = newPass,
+                    Email = username +"@ists.com.vn",
+                    TrustedIP = "localhost"
+                };
+                dbContext.Users.Add(user);
+                dbContext.SaveChanges();
+            }
+            return "Thành công";
+        }
+        [Authorize]
         public string ResetPass(string username)
         {
             var currentUsername = (User as UserModel).Username.ToLower();

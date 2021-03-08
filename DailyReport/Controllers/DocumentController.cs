@@ -25,11 +25,12 @@ namespace DailyReport.Controllers
         public ActionResult Index()
         {
             UpdateWorkItemInBackground();
+            DoUpdateExistingWIT();
             return View(GetDocumentReporting());
         }
         public ActionResult DoCallbackDocumentReporting()
         {
-            return PartialView("~/Views/Document/Index.cshtml" ,GetDocumentReporting());
+            return PartialView("~/Views/Document/Index.cshtml", GetDocumentReporting());
         }
         private List<DocumentReporting> GetDocumentReporting()
         {
@@ -91,10 +92,75 @@ namespace DailyReport.Controllers
                 }
             });
         }
+        private void DoUpdateExistingWIT()
+        {
+            Task.Run(() =>
+            {
+                bool lockTaken = false;
+
+                try
+                {
+                    Monitor.TryEnter(lockObj, timeout, ref lockTaken);
+                    if (lockTaken)
+                    {
+                        using (var dbContext = new DataContext())
+                        {
+                            foreach (var reportInfo in dbContext.DocumentReportings.Where(e => e.IsComplete == false).ToList())
+                            {
+                                var item = util.GetById(reportInfo.WorkItemId);
+                                reportInfo.State = item.State;
+                                reportInfo.UpdateDate = item.ChangeDate;
+                                if (string.IsNullOrEmpty(item.Summary))
+                                {
+                                    reportInfo.IsComplete = true;
+                                }
+                                reportInfo.Summary = item.Summary;
+                                dbContext.SaveChanges();
+                            }
+                        }
+                        //foreach (var item in util.GetWorkItemsChangeInToday())
+                        //{
+                        //    using (var dbContext = new DataContext())
+                        //    {
+                        //        var reportInfo = dbContext.DocumentReportings.FirstOrDefault(e => e.WorkItemId == item.WorkItemId);
+                        //        if (reportInfo == null)
+                        //        {
+                        //            reportInfo = new DocumentReporting()
+                        //            {
+                        //                WorkItemId = item.WorkItemId
+                        //            };
+                        //            dbContext.DocumentReportings.Add(reportInfo);
+                        //        }
+                        //        reportInfo.State = item.State;
+                        //        reportInfo.UpdateDate = item.ChangeDate;
+                        //        if (string.IsNullOrEmpty(item.Summary))
+                        //        {
+                        //            reportInfo.IsComplete = true;
+                        //        }
+                        //        reportInfo.Summary = item.Summary;
+                        //        dbContext.SaveChanges();
+                        //    }
+                        //}
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+                finally
+                {
+                    // Ensure that the lock is released.
+                    if (lockTaken)
+                    {
+                        Monitor.Exit(lockObj);
+                    }
+                }
+            });
+        }
 
         public void DoCompleteWorkItem(int id)
         {
-            
+
             using (var dbContext = new DataContext())
             {
                 var wit = dbContext.DocumentReportings.FirstOrDefault(e => e.Id == id);

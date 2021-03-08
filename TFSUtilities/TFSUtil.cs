@@ -47,6 +47,11 @@ ORDER BY[System.ChangedDate] DESC";
             var workItemCollection = workItemStore.Query(query, variables).OfType<WorkItem>().ToList();
             return workItemCollection.Select(e => new WorkItemWrapper(vcs, e)).ToList();
         }
+
+        public WorkItemWrapper GetById(int witId)
+        {
+            return new WorkItemWrapper(vcs, workItemStore.GetWorkItem(witId));
+        }
         //        public List<WorkItemInfo> GetNewWit()
         //        {
         //            string query = @"SELECT

@@ -50,11 +50,16 @@
 
         for (int index = 0; index < grid.VisibleRowCount; index++)
         {
-            var groupRowValue = grid.GetRowValues(index, column.FieldName) + "";
-            if (groupRowValue.Contains(DateTime.Today.ToString("MM/dd/yy")) || groupRowValue.Contains(DateTime.Today.AddDays(-1).ToString("MM/dd/yy")))
+            var tmp = grid.GetRowValues(index, column.FieldName);
+            if (tmp is DateTime)
             {
-                grid.ExpandRow(index, true);
+                var groupRowValue = ((DateTime)grid.GetRowValues(index, column.FieldName)).ToString("MM/dd/yy");
+                if (groupRowValue.Contains(DateTime.Today.ToString("MM/dd/yy")) || groupRowValue.Contains(DateTime.Today.AddDays(-1).ToString("MM/dd/yy")))
+                {
+                    grid.ExpandRow(index, true);
             }
+            }
+
         }
     };
 
@@ -196,5 +201,5 @@
         }).Bind(GetEditingProduct(c.Grid)).Render();
     });
 
-}).Bind(Model.OrderByDescending(e=>e.WorkingDate)).GetHtml()
+}).Bind(Model.OrderByDescending(e => e.WorkingDate)).GetHtml()
 
